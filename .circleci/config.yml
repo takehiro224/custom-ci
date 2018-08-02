@@ -1,0 +1,52 @@
+# .circleci/config.yml
+version: 2
+
+# Define the jobs for the current project.
+jobs:
+  build:
+
+    # Specify the branch to use.
+    branches:
+      only:
+        - develop
+
+    # Specify the Xcode version to use
+    macos:
+      xcode: "9.3.0"
+    environment:
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+
+    # Define the steps required to build the project.
+    steps:
+
+      # Get the code from the VCS provider.
+      - checkout
+
+      # Install CocoaPods
+      - run:
+          name: Install CocoaPods
+          command: |
+            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
+            pod install 
+
+      # Run tests.
+      - run:
+          name: gem 
+          command: sudo gem install bundler && bundle install
+      - run:
+          name: Run build 
+          command: bundle exec fastlane beta 
+          no_output_timeout: 1h
+          environment:
+            SCAN_DEVICE: iPhone 6
+            SCAN_SCHEME: circleci-fastlane 
+
+      - store_test_results:
+          path: test_output/report.xml
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: scan-test-results
+      - store_artifacts:
+          path: ~/Library/Logs/scan
+          destination: scan-logs

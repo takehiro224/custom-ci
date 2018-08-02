@@ -1,0 +1,59 @@
+# Fastfile
+
+#fastlane_version "1.42.0"
+default_platform(:ios)
+
+platform :ios do
+
+  before_all do
+    setup_circle_ci
+  end
+
+  desc "########## [BETA]"
+  desc "developmentとしてベータ配信サービスへデプロイ(本番環境向け)"
+  lane :beta do
+    # match
+    # build_app
+    # crashlytics
+    match(type: "development")
+    build_app(
+      export_method: "development",
+      export_options: {
+        provisioningProfiles: {
+          "jp.co.globis.circleci" => "match Development jp.co.globis.circleci 1533014045"
+        }
+      }
+    )
+    # deploygateへアップロード
+    deploygate(
+      ipa: "/Users/distiller/project/circleci-fastlane.ipa",
+      api_token: "858d41597b243e31c118301fe6213946dd99f4c4",
+      user: "takehiro224",
+      message: ""
+    )
+  end
+
+  desc "########## [RELEASE]"
+  desc "app-store向けリリース"
+  lane :release do
+    # match
+    # build_app
+    # deliver
+    match(type: "appstore")
+    build_app(
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "jp.co.globis.circleci" => "match Development jp.co.globis.circleci 1533014045"
+        }
+      }
+    )
+  end
+
+  after_all do |lane|
+  end
+
+  error do |lane, exception|
+  end
+
+end
